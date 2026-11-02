@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>妖怪フォトフレーム</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: sans-serif;
+      background-color: #1a1a1a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      padding: 10px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .camera-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 3 / 4;
+      background-color: #000;
+      overflow: hidden;
+    }
+    /* リアルタイムカメラ映像 */
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* 重ね合わせるフレーム枠 */
+    #frame-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* タップ判定を貫通させる */
+      border: 12px solid rgba(138, 43, 226, 0.7); /* 仮のフレーム枠（紫） */
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 20px;
+    }
+    .ghost-placeholder {
+      font-size: 3rem;
+    }
+    /* 操作ボタン */
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 15px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      background-color: #8a2be2;
+      color: white;
+      cursor: pointer;
+    }
+    button:active {
+      opacity: 0.8;
+    }
+    /* 撮影結果の非表示キャンバス */
+    #hidden-canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>👻 妖怪フォトフレーム 📸</header>
+
+  <div class="camera-container">
+    <video id="video" autoplay playsinline></video>
+    <!-- 生徒の画像ができるまでの「仮のイラストフレーム」 -->
+    <div id="frame-overlay">
+      <span class="ghost-placeholder">👻</span>
+      <span class="ghost-placeholder">🎃</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="snap-btn">写真を撮る</button>
+  </div>
+
+  <!-- 画像合成用の非表示キャンバス -->
+  <canvas id="hidden-canvas"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const snapBtn = document.getElementById('snap-btn');
+    const canvas = document.getElementById('hidden-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // カメラの起動
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }, // 背面カメラを優先
+          audio: false
+        });
+        video.srcObject = stream;
+      } catch (err) {
+        alert('カメラの起動に失敗しました。アクセス権限を確認してください。');
+        console.error(err);
+      }
+    }
+
+    // 撮影処理（サーバーに送らずローカルで合成してダウンロード）
+    snapBtn.addEventListener('click', () => {
+      const width = video.videoWidth || 640;
+      const height = video.videoHeight || 480;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // 1. カメラ映像を描画
+      ctx.drawImage(video, 0, 0, width, height);
+
+      // 2. 仮のフレーム枠と妖怪（文字）を描画
+      ctx.strokeStyle = 'rgba(138, 43, 226, 0.7)';
+      ctx.lineWidth = width * 0.05;
+      ctx.strokeRect(0, 0, width, height);
+
+      ctx.font = `${width * 0.15}px sans-serif`;
+      ctx.fillText('👻', width * 0.05, height * 0.9);
+      ctx.fillText('🎃', width * 0.75, height * 0.9);
+
+      // 3. 画像としてダウンロード（ブラウザ内完結）
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `youkai-photo-${Date.now()}.png`;
+      link.click();
+    });
+
+    window.addEventListener('load', initCamera);
+  </script>
+</body>
+</html>
