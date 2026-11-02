@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR動く妖怪カメラ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      padding: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    .camera-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 3 / 4;
+      background-color: #000;
+      overflow: hidden;
+    }
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* コマ送りで動く妖怪アニメーション表示エリア */
+    #ghost-anim {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 6rem;
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+    .guide-box {
+      position: absolute;
+      top: 20%;
+      left: 15%;
+      width: 70%;
+      height: 60%;
+      border: 2px dashed #00ffcc;
+      border-radius: 12px;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 10px;
+      color: #00ffcc;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>👁️ 妖怪発見！ARカメラ 👻</header>
+
+  <div class="camera-container">
+    <video id="video" autoplay playsinline></video>
+    <!-- カメラ内に現れて動く妖怪（コマ送り表示） -->
+    <div id="ghost-anim">👻</div>
+    <div class="guide-box">妖怪の気配を感じる場所...</div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const ghostAnim = document.getElementById('ghost-anim');
+
+    // コマ送りアニメーション用のキャラクター（生徒の画像に差し替え可能）
+    const frames = ['👻', '🎃', '💀', '👹', '👾'];
+    let currentFrame = 0;
+
+    // カメラの起動
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false
+        });
+        video.srcObject = stream;
+      } catch (err) {
+        alert('カメラの起動に失敗しました。');
+      }
+    }
+
+    // パラパラ漫画（コマ送り）アニメーションを動かす
+    setInterval(() => {
+      currentFrame = (currentFrame + 1) % frames.length;
+      ghostAnim.textContent = frames[currentFrame];
+    }, 400); // 0.4秒ごとに画像・絵文字が切り替わる
+
+    window.addEventListener('load', initCamera);
+  </script>
+</body>
+</html>
